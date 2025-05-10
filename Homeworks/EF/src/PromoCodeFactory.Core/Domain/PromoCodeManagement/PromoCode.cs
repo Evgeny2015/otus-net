@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Runtime;
 using PromoCodeFactory.Core.Domain;
 using PromoCodeFactory.Core.Domain.Administration;
@@ -21,5 +23,7 @@ namespace PromoCodeFactory.Core.Domain.PromoCodeManagement
         public Employee PartnerManager { get; set; }
 
         public Preference Preference { get; set; }
+
+        public IEnumerable<Customer> Customer { get; set; }
     }
 }

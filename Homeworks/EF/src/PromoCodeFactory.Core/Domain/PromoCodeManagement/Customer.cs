@@ -14,6 +14,9 @@ namespace PromoCodeFactory.Core.Domain.PromoCodeManagement
 
         public string Email { get; set; }
 
-        //TODO: Списки Preferences и Promocodes 
+        public PromoCode Promocode { get; set; }
+
+        public IList<CustomerPreference> CustomerPreferences { get; set; }
+
     }
 }

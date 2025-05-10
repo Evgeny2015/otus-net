@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using PromoCodeFactory.Core.Domain.Administration;
@@ -83,6 +84,26 @@ namespace PromoCodeFactory.DataAccess.Data
                 };
 
                 return customers;
+            }
+        }
+
+        public static IEnumerable<CustomerPreference> CustomerPreferences
+        {
+            get 
+            {
+                return new List<CustomerPreference>()
+                {
+                    new CustomerPreference()
+                    {
+                        Customer = Customers.FirstOrDefault(x => x.Email == "ivan_sergeev@mail.ru"),
+                        Preference = Preferences.FirstOrDefault(x => x.Name == "Театр")
+                    },
+                    new CustomerPreference()
+                    {
+                        Customer = Customers.FirstOrDefault(x => x.Email == "ivan_sergeev@mail.ru"),
+                        Preference = Preferences.FirstOrDefault(x => x.Name == "Семья")
+                    }
+                };
             }
         }
     }

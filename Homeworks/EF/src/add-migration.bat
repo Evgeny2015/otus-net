@@ -1,0 +1,1 @@
+dotnet ef migrations add ChangeRoleNameLength --startup-project PromoCodeFactory.WebHost --project PromoCodeFactory.DataAccess\PromoCodeFactory.DataAccess.csproj --context DataContext

@@ -17,6 +17,7 @@ using Pcf.GivingToCustomer.DataAccess.Data;
 using Pcf.GivingToCustomer.DataAccess.Repositories;
 using Pcf.GivingToCustomer.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MongoDB.Driver;
 
 namespace Pcf.GivingToCustomer.WebHost
 {
@@ -41,7 +42,11 @@ namespace Pcf.GivingToCustomer.WebHost
             services.AddDbContext<DataContext>(x =>
             {
                 //x.UseSqlite("Filename=PromocodeFactoryGivingToCustomerDb.sqlite");
-                x.UseNpgsql(Configuration.GetConnectionString("PromocodeFactoryGivingToCustomerDb"));
+                //x.UseNpgsql(Configuration.GetConnectionString("PromocodeFactoryGivingToCustomerDb"));
+
+                var mongoClient = new MongoClient(Configuration.GetConnectionString("Connection"));
+                x.UseMongoDB(mongoClient, Configuration.GetConnectionString("DatabaseName"));
+
                 x.UseSnakeCaseNamingConvention();
                 x.UseLazyLoadingProxies();
             });

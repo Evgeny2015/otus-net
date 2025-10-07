@@ -1,17 +1,21 @@
-using System;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
-using Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
+using Pcf.RabbitMQ;
 using Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
+using Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
 using Pcf.ReceivingFromPartner.DataAccess;
-using Pcf.ReceivingFromPartner.DataAccess.Repositories;
 using Pcf.ReceivingFromPartner.DataAccess.Data;
+using Pcf.ReceivingFromPartner.DataAccess.Repositories;
 using Pcf.ReceivingFromPartner.Integration;
+using System;
+using WebApi.Settings;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+
 
 namespace Pcf.ReceivingFromPartner.WebHost
 {
@@ -34,15 +38,19 @@ namespace Pcf.ReceivingFromPartner.WebHost
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
 
-            services.AddHttpClient<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerGateway>(c =>
-            {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
-            });
+            //services.AddHttpClient<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerGateway>(c =>
+            //{
+            //    c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
+            //});
 
-            services.AddHttpClient<IAdministrationGateway, AdministrationGateway>(c =>
-            {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
-            });
+            //services.AddHttpClient<IAdministrationGateway, AdministrationGateway>(c =>
+            //{
+            //    c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
+            //});
+
+            services.AddSingleton<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerGatewayRabbitMQ>();
+            services.AddSingleton<IAdministrationGateway, AdministrationGatewayRabbitMQ>();
+
 
             services.AddDbContext<DataContext>(x =>
             {
@@ -53,6 +61,18 @@ namespace Pcf.ReceivingFromPartner.WebHost
             });
 
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+            services.AddMassTransit(x =>
+            {                
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    ConfigureRmq(cfg, Configuration);                    
+                    cfg.ConfigureEndpoints(context);
+                });
+                
+            });            
+
+            services.AddSingleton<MasstransitService>();                        
 
             services.AddOpenApiDocument(options =>
             {
@@ -89,6 +109,17 @@ namespace Pcf.ReceivingFromPartner.WebHost
             });
 
             dbInitializer.InitializeDb();
+        }
+
+        private static void ConfigureRmq(IRabbitMqBusFactoryConfigurator configurator, IConfiguration configuration)
+        {
+            var rmqSettings = configuration.GetSection("RMQSettings").Get<RmqSettings>();
+            configurator.Host(rmqSettings.Host,                
+                h =>
+                {
+                    h.Username(rmqSettings.Login);
+                    h.Password(rmqSettings.Password);
+                });
         }
     }
 }

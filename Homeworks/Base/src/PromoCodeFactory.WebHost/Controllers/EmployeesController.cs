@@ -16,7 +16,7 @@ namespace PromoCodeFactory.WebHost.Controllers
     [Route("api/v1/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly IRepository<Employee> _employeeRepository;
+        private readonly IRepository<Employee> _employeeRepository;        
 
         public EmployeesController(IRepository<Employee> employeeRepository)
         {
@@ -69,6 +69,63 @@ namespace PromoCodeFactory.WebHost.Controllers
             };
 
             return employeeModel;
+        }
+
+        /// <summary>
+        /// Добавить нового сотрудника
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("EmployeeCreateRequest")]
+        public async Task<ActionResult<EmployeeShortResponse>> AddEmployeeAsync([FromBody] EmployeeCreateRequest emp)
+        {
+            var employee = new Employee()
+            {
+                Id = Guid.NewGuid(),
+                Email = emp.Email,
+                FirstName = emp.FirstName,
+                LastName = emp.LastName,
+            };
+
+            employee = await _employeeRepository.AddAsync(employee);
+            
+            var employeeShort = new EmployeeShortResponse()
+            {
+                Id = employee.Id,
+                Email = employee.Email,
+                FullName = employee.FullName,
+            };
+
+            return Ok(employeeShort);
+        }
+
+        /// <summary>
+        /// Удалить сотрудника по Id
+        /// </summary>
+        /// <returns></returns>
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DelEmployeeByIdAsync(Guid id)
+        {            
+            await _employeeRepository.DeleteByIdAsync(id);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Редактирование сотрудника
+        /// </summary>
+        /// <param name="emp"></param>
+        /// <returns></returns>
+        [HttpPut("EmployeeUpdateRequest")]
+        public async Task<IActionResult> UpdateEmployeeAsync(EmployeeUpdateRequest emp)
+        {
+            var employee = new Employee() { 
+                Id = emp.Id,
+                Email = emp.Email,
+                FirstName = emp.FirstName,  
+                LastName = emp.LastName,
+            };
+
+            await _employeeRepository.UpdateAsync(employee);
+            return Ok();
         }
     }
 }

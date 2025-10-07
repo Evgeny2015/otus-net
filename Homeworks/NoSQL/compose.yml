@@ -1,13 +1,16 @@
 services:
   #Administration Db
   promocode-factory-administration-db:
-    image: "postgres:latest"
+    # image: "postgres:latest"
     container_name: 'promocode-factory-administration-db'
     restart: always 
+    # ports:
+    #   - 5433:5432
+    # environment: 
+    #   - POSTGRES_PASSWORD=docker
+    image: "mongo"    
     ports:
-      - 5433:5432
-    environment: 
-      - POSTGRES_PASSWORD=docker
+      - 27017:27017
   #Administration Api
   promocode-factory-administration-api:
     build: src/Pcf.Administration/
@@ -16,7 +19,9 @@ services:
     ports:
       - "8091:8080"
     environment:
-      - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"          
+      # - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"
+      - "ConnectionStrings:Connection=mongodb://promocode-factory-administration-db:27017/"
+      - "ConnectionStrings:DatabaseName=AdminDBStore"
     depends_on: 
       - promocode-factory-administration-db
 
@@ -60,6 +65,8 @@ services:
     ports:
       - "8093:8080"
     environment:
-      - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"          
+      # - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"          
+      - "ConnectionStrings:Connection=mongodb://promocode-factory-administration-db:27017/"
+      - "ConnectionStrings:DatabaseName=CustomerDBStore"
     depends_on: 
       - promocode-factory-giving-to-customer-db

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PromoCodeFactory.Core.Abstractions.Repositories;
 using PromoCodeFactory.Core.Domain.PromoCodeManagement;
+using PromoCodeFactory.DataAccess.Validation;
 using PromoCodeFactory.WebHost.Models;
+//using PromoCodeFactory.WebHost.;
 
 namespace PromoCodeFactory.WebHost.Controllers
 {
@@ -77,33 +79,19 @@ namespace PromoCodeFactory.WebHost.Controllers
         [HttpPost("{id}/limits")]
         public async Task<IActionResult> SetPartnerPromoCodeLimitAsync(Guid id, SetPartnerPromoCodeLimitRequest request)
         {
-            var partner = await _partnersRepository.GetByIdAsync(id);
+            var validation = new SetPartnerPromoCodeLimitRequestValidation(this._partnersRepository, id, request);
+            var result = await validation.Validate();
 
-            if (partner == null)
-                return NotFound();
-            
-            //Если партнер заблокирован, то нужно выдать исключение
-            if (!partner.IsActive)
-                return BadRequest("Данный партнер не активен");
-            
-            //Установка лимита партнеру
-            var activeLimit = partner.PartnerLimits.FirstOrDefault(x => 
-                !x.CancelDate.HasValue);
-            
-            if (activeLimit != null)
+            switch (result.Status)
             {
-                //Если партнеру выставляется лимит, то мы 
-                //должны обнулить количество промокодов, которые партнер выдал, если лимит закончился, 
-                //то количество не обнуляется
-                partner.NumberIssuedPromoCodes = 0;
-                
-                //При установке лимита нужно отключить предыдущий лимит
-                activeLimit.CancelDate = DateTime.Now;
-            }
+                case ValidationStatus.NotFound:
+                    return NotFound();
 
-            if (request.Limit <= 0)
-                return BadRequest("Лимит должен быть больше 0");
-            
+                case ValidationStatus.BadRequest:
+                    return BadRequest(result.ErrorMessage);
+            }
+            var partner = validation.GetValidEntity();
+
             var newLimit = new PartnerPromoCodeLimit()
             {
                 Limit = request.Limit,

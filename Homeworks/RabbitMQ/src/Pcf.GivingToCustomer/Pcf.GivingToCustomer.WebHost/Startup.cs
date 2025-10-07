@@ -1,3 +1,5 @@
+using HotChocolate;
+using HotChocolate.AspNetCore;
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +15,10 @@ using Pcf.GivingToCustomer.DataAccess;
 using Pcf.GivingToCustomer.DataAccess.Repositories;
 using Pcf.GivingToCustomer.Integration;
 using Microsoft.AspNetCore.Routing;
+using Google.Protobuf.WellKnownTypes;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Pcf.GivingToCustomer.WebHost.GraphQL;
+using System.Threading.Tasks;
 
 namespace Pcf.GivingToCustomer.WebHost
 {
@@ -42,16 +48,26 @@ namespace Pcf.GivingToCustomer.WebHost
                 x.UseLazyLoadingProxies();
             });
 
-            //AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            services.AddGraphQLServer()
+                .AddQueryType()
+                .AddMutationType()
 
+                .AddTypeExtension<GQQuery>()                
+                .AddTypeExtension<GQMutation>()
+                .AddProjections()
+                .AddFiltering()
+                .AddSorting();
+
+            //AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            /*
             services.AddOpenApiDocument(options =>
             {
                 options.Title = "PromoCode Factory Giving To Customer API Doc";
                 options.Version = "1.0";
             });
+            */
 
-            services.AddGrpc();
-            
+            //services.AddGrpc();            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -67,10 +83,10 @@ namespace Pcf.GivingToCustomer.WebHost
             }
 
             app.UseOpenApi();
-            app.UseSwaggerUi(x =>
-            {
-                x.DocExpansion = "list";
-            });
+            //app.UseSwaggerUi(x =>
+            //{
+            //  x.DocExpansion = "list";
+            //});
 
             //app.UseHttpsRedirection();
 
@@ -78,9 +94,14 @@ namespace Pcf.GivingToCustomer.WebHost
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
-                endpoints.MapGrpcService<Services.CustomerService>();
-            });            
+                //endpoints.MapControllers();
+                //endpoints.MapGrpcService<Services.CustomerService>();
+                endpoints.MapGraphQL()
+                    .WithOptions(new GraphQLServerOptions
+                    {
+                        Tool = { GaTrackingId = "fff-1" }
+                    });
+            });                                
 
             dbInitializer.InitializeDb();
         }

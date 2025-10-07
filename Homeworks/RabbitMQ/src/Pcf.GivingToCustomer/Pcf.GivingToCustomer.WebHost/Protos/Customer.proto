@@ -1,0 +1,77 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "grpc";
+
+package customer;
+
+service Customer {
+
+  // Получить список клиентов
+  rpc GetAll (Empty) returns (CustomerResponseList);
+  rpc Get (CustomerRequest) returns (CustomerResponse);
+  rpc Create (CreateCustomerRequest) returns (CustomerShortResponse);
+  rpc Update (EditCustomerRequest) returns (Empty);
+  rpc Delete (DeleteCustomerRequest) returns (Empty);
+}
+
+message Empty { }
+
+message CustomerRequest {
+	string Id = 1;
+}
+
+message CustomerResponse {
+	string Id = 1;
+    string FirstName = 2;
+    string LastName = 3;
+    string Email = 4;
+    repeated PreferenceResponse Preferences = 5;
+    repeated PromoCodeShortResponse PromoCodes = 6;
+}
+
+message CustomerResponseList {
+    repeated CustomerShortResponse List = 1;
+}
+
+message PreferenceResponse
+{
+    string Id = 1;
+    string Name = 2;
+}
+
+message PromoCodeShortResponse
+{
+    string Id = 1;
+    string Code = 2;
+    string ServiceInfo = 3;
+    string BeginDate = 4;
+    string EndDate = 5;
+    string PartnerId = 6;
+}
+
+message CustomerShortResponse {  
+	string Id = 1;
+	string FirstName = 2;
+	string LastName = 3;
+	string Email = 4;
+}
+
+message CreateCustomerRequest
+{
+    string FirstName = 1;
+    string LastName = 2;
+    string Email = 3;
+}
+
+message EditCustomerRequest
+{
+    string Id = 1;
+    string FirstName = 2;
+    string LastName = 3;
+    string Email = 4;
+}
+
+message DeleteCustomerRequest
+{
+    string Id = 1;
+}
